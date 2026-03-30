@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز الألعاب العالمي</title>
+    <style>
+        /* تصميم عصري ومناسب للألعاب */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a; /* لون غامق فخم */
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .total-score-box {
+            font-size: 1.5em;
+            color: #38bdf8;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .game-card {
+            background: #1e293b;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #334155;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: #38bdf8;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+        }
+
+        .game-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 1px solid #334155;
+        }
+
+        .game-info {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .game-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+
+        .high-score {
+            color: #4ade80;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .admin-link {
+            display: inline-block;
+            margin-top: 40px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: 0.3s;
+        }
+
+        .admin-link:hover { color: #f43f5e; }
+
+        /* تنسيق لاسم اللاعب الحالي */
+        #display-name { color: #fbbf24; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🎮 مركز الألعاب الخاص بي</h1>
+        <p>مرحباً، <span id="display-name">...</span> 
+   <button onclick="editName()" style="background:none; border:none; cursor:pointer; font-size:0.8em;">✏️ تعديل</button>
+</p>
+        <div class="total-score-box">مجموع نقاطك الكلي: <span id="total-score">0</span></div>
+    </div>
+
+    <div class="container">
+        <div class="game-card" onclick="goToGame('game1.html')">
+            <img src="game1.jpg" alt="لعبة 1">
+            <div class="game-info">
+                <h3>اللعبة الأولى</h3>
+                <div class="high-score">أعلى سكور: <span id="s1">0</span></div>
+            </div>
+        </div>
+
+        <div class="game-card" onclick="goToGame('game2.html')">
+            <img src="game2.jpg" alt="لعبة 2">
+            <div class="game-info">
+                <h3>اللعبة الثانية</h3>
+                <div class="high-score">أعلى سكور: <span id="s2">0</span></div>
+            </div>
+        </div>
+
+        <div class="game-card" onclick="goToGame('game3.html')">
+            <img src="game3.jpg" alt="لعبة 3">
+            <div class="game-info">
+                <h3>اللعبة الثالثة</h3>
+                <div class="high-score">أعلى سكور: <span id="s3">0</span></div>
+            </div>
+        </div>
+
+        <div class="game-card" onclick="goToGame('game4.html')">
+            <img src="game4.jpg" alt="لعبة 4">
+            <div class="game-info">
+                <h3>اللعبة الرابعة</h3>
+                <div class="high-score">أعلى سكور: <span id="s4">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <a href="admin.html" class="admin-link">فتح لوحة الإدارة للمدير 🔑</a>
+
+    <script>
+        function editName() {
+    let newName = prompt("أدخل الاسم الصحيح:");
+    if (newName && newName.trim() !== "") {
+        localStorage.setItem('p_name', newName); // تحديث في ذاكرة المتصفح
+        location.reload(); // إعادة تحميل الصفحة لتحديث البيانات
+    }
+}
+        // --- إعدادات Firebase ---
+        // استبدل الرابط التالي بالرابط الذي نسخته من Firebase
+        const DATABASE_URL = "https://games-center-5597c-default-rtdb.firebaseio.com/"; 
+
+        let playerName = localStorage.getItem('p_name');
+
+        // طلب اسم اللاعب إذا كان يدخل لأول مرة
+        if (!playerName) {
+            playerName = prompt("مرحباً بك في عالم الألعاب! الرجاء إدخال اسمك:");
+            if (playerName && playerName.trim() !== "") {
+                localStorage.setItem('p_name', playerName);
+            } else {
+                playerName = "لاعب_مجهول";
+                localStorage.setItem('p_name', playerName);
+            }
+        }
+        document.getElementById('display-name').innerText = playerName;
+
+        // دالة للانتقال للعبة
+        function goToGame(url) {
+            location.href = url;
+        }
+
+        // جلب النقاط من Firebase وعرضها
+        async function loadData() {
+            try {
+                const response = await fetch(`${DATABASE_URL}/players/${playerName}.json`);
+                const data = await response.json();
+                
+                if (data && data.games) {
+                    const g1 = data.games.game1 || 0;
+                    const g2 = data.games.game2 || 0;
+                    const g3 = data.games.game3 || 0;
+                    const g4 = data.games.game4 || 0;
+
+                    document.getElementById('s1').innerText = g1;
+                    document.getElementById('s2').innerText = g2;
+                    document.getElementById('s3').innerText = g3;
+                    document.getElementById('s4').innerText = g4;
+                    document.getElementById('total-score').innerText = g1 + g2 + g3 + g4;
+                }
+            } catch (error) {
+                console.error("خطأ في الاتصال بالقاعدة:", error);
+            }
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>

@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Maze Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #0FF;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s forwards;
+            pointer-events: none;
+        }
+        .fade-out {
+            animation: fadeOut 0.5s forwards;
+            pointer-events: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .inactive {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #aiToggleButton {
+            position: absolute;
+            top: 2%;
+            left: 2%;
+            padding: 1vh 1.5vw;
+            font-size: 1vw;
+            border: 0.2vh solid #0F0;
+            background-color: #0F0;
+            color: #000;
+            cursor: pointer;
+            border-radius: 0.5vh;
+            transition: all 0.3s;
+            z-index: 1000;
+            text-transform: uppercase;
+            letter-spacing: 0.1vw;
+            box-shadow: 0 0 1vh #0F0;
+        }
+        #aiToggleButton:hover {
+            background-color: #0C0;
+            box-shadow: 0 0 2vh #0C0;
+        }
+        #aiToggleButton.ai-enabled {
+            background-color: #0F0;
+            color: #000;
+            border-color: #0F0;
+            box-shadow: 0 0 1vh #0F0;
+        }
+        #aiToggleButton.ai-disabled {
+            background-color: #F00;
+            color: #000;
+            border-color: #F00;
+            box-shadow: 0 0 1vh #F00;
+        }
+        #instructionsButton {
+            position: absolute;
+            top: 2%;
+            right: 2%;
+            padding: 1vh 1.5vw;
+            font-size: 1vw;
+            border: 0.2vh solid #0FF;
+            background-color: transparent;
+            color: #0FF;
+            cursor: pointer;
+            border-radius: 0.5vh;
+            transition: all 0.3s;
+            z-index: 1000;
+            text-transform: uppercase;
+            letter-spacing: 0.1vw;
+            box-shadow: 0 0 1vh #0FF;
+        }
+        #instructionsButton:hover {
+            background-color: #0FF;
+            color: #000;
+            box-shadow: 0 0 2vh #0FF;
+        }
+        #surrenderButton {
+            position: absolute;
+            top: 2%;
+            left: 2%;
+            padding: 1vh 1.5vw;
+            font-size: 1vw;
+            border: 0.2vh solid #F00;
+            background-color: transparent;
+            color: #F00;
+            cursor: pointer;
+            border-radius: 0.5vh;
+            transition: all 0.3s;
+            z-index: 1000;
+            text-transform: uppercase;
+            letter-spacing: 0.1vw;
+            box-shadow: 0 0 1vh #F00;
+            display: none;
+        }
+        #surrenderButton:hover {
+            background-color: #F00;
+            color: #000;
+            box-shadow: 0 0 2vh #F00;
+        }
+        #surrenderModal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            animation: fadeIn 0.5s forwards;
+        }
+        #surrenderContent {
+            background-color: #111;
+            margin: 15% auto;
+            padding: 3vh 3vw;
+            border: 0.6vh solid #F00;
+            width: 80%;
+            max-width: 40vw;
+            border-radius: 1vh;
+            color: #F00;
+            position: relative;
+            box-shadow: 0 0 3vh #F00;
+            font-size: 1vw;
+            text-align: center;
+            line-height: 1.6;
+        }
+        #surrenderContent button {
+            padding: 1.5vh 3vw;
+            margin: 1vh;
+            font-size: 1.5vw;
+            border: 0.2vh solid #F00;
+            background-color: transparent;
+            color: #F00;
+            cursor: pointer;
+            border-radius: 0.5vh;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.05vw;
+            box-shadow: 0 0 1vh #F00;
+        }
+        #surrenderContent button:hover {
+            background-color: #F00;
+            color: #000;
+            box-shadow: 0 0 2vh #F00;
+        }
+        #instructionsModal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.95);
+            animation: fadeIn 0.5s forwards;
+        }
+        #instructionsContent {
+            background-color: #111;
+            margin: 10% auto;
+            padding: 3vh 3vw;
+            border: 0.6vh solid #0FF;
+            width: 80%;
+            max-width: 60vw;
+            border-radius: 1vh;
+            color: #0FF;
+            position: relative;
+            box-shadow: 0 0 3vh #0FF;
+            font-size: 1vw;
+            line-height: 1.6;
+        }
+        #closeModal {
+            color: #0FF;
+            float: right;
+            font-size: 2vw;
+            font-weight: bold;
+            position: absolute;
+            top: 1vh;
+            right: 2vw;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        #closeModal:hover,
+        #closeModal:focus {
+            color: #FFF;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            opacity: 1;
+            transition: opacity 0.5s;
+            width: 90vw;
+            max-width: 800px;
+        }
+        #app h1 {
+            font-size: 3vw;
+            margin-bottom: 2vh;
+        }
+        .neon-letter {
+            animation: neonFlicker 2s infinite;
+        }
+        @keyframes neonFlicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                text-shadow:
+                    0 0 0.2vh #0FF,
+                    0 0 0.5vh #0FF,
+                    0 0 1vh #0FF;
+                color: #0FF;
+            }
+            20%, 24%, 55% {
+                text-shadow: none;
+                color: #033;
+            }
+        }
+        #menu button {
+            padding: 1vh 2vw;
+            margin: 0.5vh;
+            font-size: 1vw;
+            border: 0.2vh solid #0FF;
+            background-color: transparent;
+            color: #0FF;
+            cursor: pointer;
+            border-radius: 0.5vh;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.05vw;
+            box-shadow: 0 0 1vh #0FF;
+        }
+        #menu button:hover {
+            background-color: #0FF;
+            color: #000;
+            box-shadow: 0 0 2vh #0FF;
+        }
+        #menu {
+            margin-bottom: 2vh;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1vh 1vw;
+        }
+        #mazeContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1vh;
+            width: 80vw;
+            max-width: 600px;
+            height: 80vw;
+            max-height: 600px;
+            position: relative;
+            border: 0.2vh solid #0FF;
+            box-shadow: 0 0 2vh #0FF;
+            border-radius: 1vh;
+            background-color: #000;
+            opacity: 0;
+            transition: opacity 0.5s;
+            transform-origin: center center;
+            pointer-events: none;
+        }
+        #mazeContainer.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        @keyframes redFlicker {
+            0%, 100% { border-color: #F00; box-shadow: 0 0 1vh #F00; }
+            50% { border-color: #900; box-shadow: 0 0 2vh #F00; }
+        }
+        #mazeContainer.speeding {
+            animation: redFlicker 0.1s infinite;
+        }
+        #mazeCanvas {
+            border: none;
+            background-color: #111;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 1vh;
+            box-shadow: inset 0 0 1vh #0FF;
+            width: 100%;
+            height: 100%;
+        }
+        #controls {
+            display: flex;
+            justify-content: center;
+            gap: 1vh 1vw;
+            margin-top: 1vh;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            flex-wrap: wrap;
+        }
+        #controls.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #controls button {
+            padding: 1vh 2vw;
+            margin: 0.5vh;
+            font-size: 1vw;
+            border: 0.2vh solid #0FF;
+            background-color: transparent;
+            color: #0FF;
+            cursor: pointer;
+            border-radius: 0.5vh;
+            transition: all 0.3s;
+            flex: 1;
+            max-width: 20vw;
+            text-transform: uppercase;
+            letter-spacing: 0.05vw;
+            box-shadow: 0 0 1vh #0FF;
+        }
+        #controls button:hover {
+            background-color: #0FF;
+            color: #000;
+            box-shadow: 0 0 2vh #0FF;
+        }
+        #winMessage {
+            display: none;
+            margin-top: 2vh;
+            background-color: #111;
+            padding: 2vh 2vw;
+            border: 0.6vh solid #0FF;
+            border-radius: 1vh;
+            box-shadow: 0 0 2vh #0FF;
+            color: #0FF;
+            text-shadow: 0 0 1vh #0FF;
+            animation: fadeIn 0.5s forwards;
+            width: 80%;
+            max-width: 50vw;
+        }
+        #winMessage p {
+            margin: 0 0 1vh 0;
+            font-size: 1vw;
+            color: #0F0;
+            text-shadow: 0 0 1vh #0F0;
+        }
+        #winMessage button {
+            padding: 1vh 2vw;
+            font-size: 1vw;
+            border: 0.2vh solid #0FF;
+            background-color: transparent;
+            color: #0FF;
+            cursor: pointer;
+            border-radius: 0.5vh;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.05vw;
+            box-shadow: 0 0 1vh #0FF;
+        }
+        #winMessage button:hover {
+            background-color: #0FF;
+            color: #000;
+            box-shadow: 0 0 2vh #0FF;
+        }
+        #timer {
+            margin-top: 1.5vh;
+            font-size: 1vw;
+            color: #0FF;
+            text-shadow: 0 0 0.5vh #0FF;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        #timer.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #rotationAlert {
+            color: #F00;
+            font-weight: bold;
+            font-size: 1vw;
+            margin-top: 1vh;
+            text-shadow: 0 0 0.5vh #F00;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        #rotationAlert.active {
+            opacity: 1;
+        }
+        #aiSpeedAlert {
+            color: #FFA500;
+            font-weight: bold;
+            font-size: 1vw;
+            margin-top: 0.5vh;
+            text-shadow: 0 0 0.5vh #FFA500;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        #aiSpeedAlert.active {
+            opacity: 1;
+        }
+        #aiSpeedAlert.speeding {
+            color: #F00;
+            text-shadow: 0 0 1vh #F00;
+        }
+        .flashing {
+            animation: flashRed 0.5s alternate infinite;
+        }
+        @keyframes flashRed {
+            from { background-color: #111; }
+            to { background-color: #F00; }
+        }
+        @keyframes flashRedSmooth {
+            0%, 100% { fill: #111; }
+            50% { fill: #F00; }
+        }
+        .flashing-path {
+            animation: flashRedSmooth 0.5s infinite alternate;
+        }
+        #instructionsContent::-webkit-scrollbar,
+        #surrenderContent::-webkit-scrollbar {
+            width: 0.5vw;
+        }
+        #instructionsContent::-webkit-scrollbar-track,
+        #surrenderContent::-webkit-scrollbar-track {
+            background: #444;
+            border-radius: 0.2vw;
+        }
+        #instructionsContent::-webkit-scrollbar-thumb,
+        #surrenderContent::-webkit-scrollbar-thumb {
+            background: #0FF;
+            border-radius: 0.2vw;
+        }
+        #instructionsContent::-webkit-scrollbar-thumb:hover,
+        #surrenderContent::-webkit-scrollbar-thumb:hover {
+            background: #0CC;
+        }
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8vw;
+            color: #0FF;
+            text-shadow: 0 0 2vh #0FF;
+            display: none;
+            z-index: 3000;
+        }
+        #crtOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0);
+            mix-blend-mode: screen;
+            z-index: 3000;
+        }
+        .crt-effect {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><rect width="1" height="1" fill="rgba(255,255,255,0.05)"/><rect x="1" y="1" width="1" height="1" fill="rgba(255,255,255,0.05)"/></svg>');
+            background-size: 2px 2px;
+            mix-blend-mode: overlay;
+            animation: scanlines 0.5s infinite;
+        }
+        @keyframes scanlines {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 2px; }
+        }
+        .crt-transition {
+            animation: crtTransition 1s forwards;
+        }
+        @keyframes crtTransition {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            #aiToggleButton, #instructionsButton, #surrenderButton {
+                padding: 2vh 3vw;
+                font-size: 2.5vw;
+                letter-spacing: 0.15vw;
+            }
+            #surrenderContent, #instructionsContent {
+                padding: 3vh 3vw;
+                font-size: 2vw;
+                max-width: 80vw;
+            }
+            #app h1 {
+                font-size: 5vw;
+            }
+            #menu button, #controls button, #winMessage button {
+                padding: 2vh 3vw;
+                font-size: 2vw;
+                letter-spacing: 0.1vw;
+                max-width: 40vw;
+            }
+            #winMessage {
+                padding: 3vh 3vw;
+                font-size: 2.5vw;
+                max-width: 80vw;
+            }
+            #winMessage p {
+                font-size: 2.5vw;
+            }
+            #countdown {
+                font-size: 15vw;
+            }
+            #timer {
+                font-size: 2vw;
+            }
+            #rotationAlert {
+                font-size: 2vw;
+            }
+            #aiSpeedAlert {
+                font-size: 2vw;
+            }
+        }
+        /* Ambient Particles */
+        #ambientCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 500;
+        }
+        #foregroundCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2500;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="exitAndSave()" style="
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 10px 20px;
+    background: #f43f5e;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 9999;
+    font-weight: bold;
+    font-family: sans-serif;
+">خروج وحفظ التقدّم ↩️</button>
+    <canvas id="ambientCanvas"></canvas>
+    <button id="aiToggleButton" class="ai-enabled" onclick="toggleAI()">Disable AI</button>
+    <button id="instructionsButton">Instructions</button>
+    <button id="surrenderButton" onclick="surrenderGame()">Surrender</button>
+    
+    <div id="surrenderModal">
+        <div id="surrenderContent">
+            <h2>Surrender</h2>
+            <p>Are you sure you want to surrender?</p>
+            <button id="confirmSurrenderButton">Yes</button>
+            <button id="cancelSurrenderButton">No</button>
+        </div>
+    </div>
+
+    <div id="instructionsModal">
+        <div id="instructionsContent">
+            <span id="closeModal">&times;</span>
+            <h2>How to Play</h2>
+            <p>Welcome to "The Ultimate Maze"! Your goal is to navigate the player through the maze to reach the finish point.</p>
+            <h3>Controls:</h3>
+            <ul>
+                <li><strong>Arrow Keys</strong>: Move the player Up, Down, Left, or Right.</li>
+                <li><strong>On-Screen Buttons</strong>: Use the on-screen buttons to move if you prefer clicking.</li>
+            </ul>
+            <h3>Gameplay:</h3>
+            <ul>
+                <li>Select a difficulty level from the menu to start the game.</li>
+                <li>Use the controls to navigate through the maze.</li>
+                <li>A timer counts down the time you have left to solve the maze.</li>
+                <li>Be careful! On higher difficulties, the maze may rotate, and hidden obstacles may appear.</li>
+                <li>If you get stuck, you can surrender and return to the main menu.</li>
+                <li>You can enable or disable the AI opponent using the button at the top left.</li>
+            </ul>
+            <p>Good luck and have fun!</p>
+        </div>
+    </div>
+
+    <div id="app">
+        <h1 id="title">The Ultimate Maze</h1>
+        <div id="menu">
+            <button onclick="startGame('easy')">Easy</button>
+            <button onclick="startGame('medium')">Medium</button>
+            <button onclick="startGame('hard')">Hard</button>
+            <button onclick="startGame('hidden')">Hidden</button>
+        </div>
+        <div id="mazeContainer" class="inactive">
+            <canvas id="mazeCanvas" width="600" height="600"></canvas>
+            <canvas id="foregroundCanvas"></canvas>
+        </div>
+        <div id="rotationAlert"></div>
+        <div id="aiSpeedAlert"></div>
+        <div id="controls" class="inactive">
+            <button onclick="movePlayer(0, -1)">Up</button>
+            <button onclick="movePlayer(0, 1)">Down</button>
+            <button onclick="movePlayer(-1, 0)">Left</button>
+            <button onclick="movePlayer(1, 0)">Right</button>
+        </div>
+        <div id="winMessage">
+            <p id="winText">Congratulations! You've reached the end!</p>
+            <button onclick="resetGame()">Return to Menu</button>
+        </div>
+        <div id="timer" class="inactive">Time Left: <span id="timeLeft">0:00</span></div>
+        <div id="countdown"></div>
+    </div>
+
+    <audio id="countdownBeep" src="countdown_beep.mp3"></audio>
+    <audio id="moveSound" src="move_sound.mp3"></audio>
+    <audio id="winSound" src="win_sound.mp3"></audio>
+    <audio id="loseSound" src="lose_sound.mp3"></audio>
+    <div id="crtOverlay"></div>
+
+    <script>
+let score = 0; // النقاط الحالية
+// نظام النقاط الجديد الذي طلبته
+const rewardsWithoutAI = [5, 10, 15, 20]; 
+const rewardsWithAI    = [50, 100, 150, 200];
+function calculateWinPoints() {
+    // نفترض أن currentLevelIndex يبدأ من 0 (المستوى الأول) إلى 3 (المستوى الرابع)
+    // ونفترض أن switchAI.checked هي التي تحدد حالة الذكاء الاصطناعي
+    
+    let isAIActive = document.getElementById('switchAI').checked;
+    let levelIdx = typeof currentLevelIndex !== 'undefined' ? currentLevelIndex : 0;
+
+    let pointsEarned = 0;
+
+    if (isAIActive) {
+        pointsEarned = rewardsWithAI[levelIdx] || 50; // إذا لم يجد المستوى يعطي أقل قيمة مع AI
+    } else {
+        pointsEarned = rewardsWithoutAI[levelIdx] || 5; // إذا لم يجد المستوى يعطي أقل قيمة بدون AI
+    }
+
+    return pointsEarned;
+}
+function giveWinPoints() {
+    // جلب مستوى الصعوبة الحالي (0: سهل، 1: متوسط، 2: صعب، 3: مخفي)
+    const difficulty = parseInt(document.getElementById('difficulty').value);
+    // التحقق من حالة الذكاء الاصطناعي
+    const isAIActive = document.getElementById('switchAI').checked;
+
+    let pointsEarned = 0;
+    if (isAIActive) {
+        pointsEarned = rewardsWithAI[difficulty];
+    } else {
+        pointsEarned = rewardsWithoutAI[difficulty];
+    }
+
+    score = pointsEarned; // تحديث متغير score بالقيمة الجديدة
+    console.log("النقاط المستحقة: " + score);
+    return pointsEarned;
+}
+function exitAndSave() {
+    // العودة فوراً لأن الحفظ تم لحظة الفوز
+    window.location.href = "index.html";
+}
+
+        // Ambient Particles
+        const ambientCanvas = document.getElementById('ambientCanvas');
+        const ambientCtx = ambientCanvas.getContext('2d');
+        ambientCanvas.width = window.innerWidth;
+        ambientCanvas.height = window.innerHeight;
+        window.addEventListener('resize', () => {
+            ambientCanvas.width = window.innerWidth;
+            ambientCanvas.height = window.innerHeight;
+        });
+        class AmbientParticle {
+            constructor() {
+                this.x = Math.random() * ambientCanvas.width;
+                this.y = Math.random() * ambientCanvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > ambientCanvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > ambientCanvas.height) this.speedY *= -1;
+            }
+            draw() {
+                ambientCtx.beginPath();
+                ambientCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ambientCtx.fillStyle = `rgba(0, 255, 255, ${this.opacity})`;
+                ambientCtx.fill();
+            }
+        }
+        const ambientParticles = [];
+        for(let i = 0; i < 100; i++) {
+            ambientParticles.push(new AmbientParticle());
+        }
+        function animateAmbient() {
+            ambientCtx.clearRect(0, 0, ambientCanvas.width, ambientCanvas.height);
+            ambientParticles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateAmbient);
+        }
+        animateAmbient();
+        // Main Game Code
+        function generateMaze(size) {
+            let maze = Array.from({ length: size }, () => Array(size).fill(1));
+            let stack = [];
+            let startX = 1;
+            let startY = 1;
+            maze[startY][startX] = 0;
+            stack.push({ x: startX, y: startY });
+            const directions = [
+                { dx: 0, dy: -2 },
+                { dx: 0, dy: 2 },
+                { dx: -2, dy: 0 },
+                { dx: 2, dy: 0 }
+            ];
+            while (stack.length > 0) {
+                let current = stack[stack.length - 1];
+                let neighbors = [];
+                directions.forEach(dir => {
+                    let nx = current.x + dir.dx;
+                    let ny = current.y + dir.dy;
+                    if (nx > 0 && nx < size - 1 && ny > 0 && ny < size - 1 && maze[ny][nx] === 1) {
+                        neighbors.push({ x: nx, y: ny, dx: dir.dx, dy: dir.dy });
+                    }
+                });
+                if (neighbors.length > 0) {
+                    let randIndex = Math.floor(Math.random() * neighbors.length);
+                    let chosen = neighbors[randIndex];
+                    maze[current.y + chosen.dy / 2][current.x + chosen.dx / 2] = 0;
+                    maze[chosen.y][chosen.x] = 0;
+                    stack.push({ x: chosen.x, y: chosen.y });
+                } else {
+                    stack.pop();
+                }
+            }
+            maze[1][1] = 2;
+            maze[size - 2][size - 2] = 3;
+            return maze;
+        }
+        let maze = [];
+        let playerPosition = { x: 1, y: 1 };
+        let aiPosition = { x: 1, y: 1 };
+        let finishPosition = {};
+        let cellSize = 600 / 51;
+        const canvasSize = 600;
+        let timer;
+        let rotationTimer;
+        let timeLeft = 0;
+        let rotationAngle = 0;
+        let isFlashing = false;
+        let trail = [];
+        let aiTrail = [];
+        let confettiInterval;
+        let fireflies = [];
+        const TRAIL_FADE_DURATION = 1000;
+        const FIREFLY_COUNT = 10;
+        const FIREFLY_SPEED = 0.5;
+        const GLOW_RADIUS = 2;
+        let fogTime = 0;
+        const FOG_PULSATE_SPEED = 0.005;
+        const FOG_PULSATE_AMOUNT = 0.3;
+        const OPACITY_FADE_SPEED = 0.05;
+        let aiPath = [];
+        let aiEnabled = true;
+        let aiMoveDelay = 200;
+        let aiSpeedMultiplier = 1;
+        let aiSpeedUpDuration = 2000;
+        let aiSpeedUpChance = 0.05;
+        let aiSpeedUpCooldown = false;
+        let gameStarted = false;
+        let gameOver = false;
+        let aiConfusedUntil = 0;
+        let explosionParticles = [];
+        let dashParticles = [];
+        let playerLost = false;
+        // Foreground Particles
+        const foregroundCanvas = document.getElementById('foregroundCanvas');
+        const foregroundCtx = foregroundCanvas.getContext('2d');
+        foregroundCanvas.width = canvasSize;
+        foregroundCanvas.height = canvasSize;
+        class ForegroundParticle {
+            constructor() {
+                this.x = Math.random() * canvasSize;
+                this.y = Math.random() * canvasSize;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = (Math.random() - 0.5) * 1;
+                this.speedY = (Math.random() - 0.5) * 1;
+                this.opacity = Math.random() * 0.3 + 0.1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > canvasSize) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvasSize) this.speedY *= -1;
+            }
+            draw() {
+                foregroundCtx.beginPath();
+                foregroundCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                foregroundCtx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                foregroundCtx.fill();
+            }
+        }
+        const foregroundParticles = [];
+        for(let i = 0; i < 50; i++) {
+            foregroundParticles.push(new ForegroundParticle());
+        }
+        function animateForeground() {
+            foregroundCtx.clearRect(0, 0, foregroundCanvas.width, foregroundCanvas.height);
+            foregroundParticles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateForeground);
+        }
+        animateForeground();
+        function startGame(difficulty) {
+            let size;
+            switch(difficulty) {
+                case 'easy':
+                    size = 21;
+                    timeLeft = 120;
+                    break;
+                case 'medium':
+                    size = 31;
+                    timeLeft = 180;
+                    break;
+                case 'hard':
+                    size = 41;
+                    timeLeft = 240;
+                    break;
+                case 'hidden':
+                    size = 51;
+                    timeLeft = 300;
+                    break;
+                default:
+                    size = 21;
+                    timeLeft = 120;
+            }
+            maze = generateMaze(size);
+            playerPosition = { x: 1, y: 1 };
+            aiPosition = { x: 1, y: 1 };
+            finishPosition = { x: size - 2, y: size - 2 };
+            cellSize = canvasSize / size;
+            const menu = document.getElementById("menu");
+            menu.classList.add("fade-out");
+            menu.style.pointerEvents = "none";
+            setTimeout(() => {
+                menu.style.display = "none";
+                menu.classList.remove("fade-out");
+            }, 500);
+            const mazeContainer = document.getElementById("mazeContainer");
+            mazeContainer.classList.add("active");
+            const controls = document.getElementById("controls");
+            controls.classList.add("active");
+            const timerDisplay = document.getElementById("timer");
+            timerDisplay.classList.add("active");
+            const surrenderButton = document.getElementById("surrenderButton");
+            surrenderButton.style.display = "block";
+            surrenderButton.classList.remove("fade-out");
+            surrenderButton.style.pointerEvents = "auto";
+            document.getElementById("winMessage").style.display = "none";
+            const aiToggleButton = document.getElementById("aiToggleButton");
+            aiToggleButton.style.display = "none";
+            drawMaze();
+            if (difficulty === 'hidden') {
+                fireflies = Array.from({ length: FIREFLY_COUNT }, () => createFirefly());
+            } else {
+                fireflies = [];
+            }
+            if (aiEnabled) {
+                aiPath = findPath(aiPosition, finishPosition);
+            }
+            startCountdown(() => {
+                startTimer();
+                gameStarted = true;
+                gameOver = false;
+                if (difficulty === 'hard' || difficulty === 'hidden') {
+                    rotationTimer = setInterval(startRotationCountdown, 10000);
+                }
+                if (aiEnabled) {
+                    moveAI();
+                }
+                animate();
+            });
+        }
+        function startCountdown(callback) {
+            const countdownElement = document.getElementById("countdown");
+            const countdownBeep = document.getElementById("countdownBeep");
+            let countdown = 3;
+            countdownElement.style.display = "block";
+            countdownElement.textContent = countdown;
+            countdownBeep.play();
+            let countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    countdownElement.textContent = countdown;
+                    countdownBeep.play();
+                } else {
+                    clearInterval(countdownInterval);
+                    countdownElement.style.display = "none";
+                    callback();
+                }
+            }, 1000);
+        }
+        function createFirefly() {
+            return {
+                x: Math.random() * canvasSize,
+                y: Math.random() * canvasSize,
+                dx: (Math.random() - 0.5) * FIREFLY_SPEED,
+                dy: (Math.random() - 0.5) * FIREFLY_SPEED,
+                opacity: Math.random() * 0.2 + 0.1,
+                angle: Math.random() * 360,
+                rotationSpeed: (Math.random() - 0.5) * 2,
+                sizeVariation: Math.random() * 0.5 + 0.75
+            };
+        }
+        function surrenderGame() {
+            document.getElementById("surrenderModal").style.display = "block";
+        }
+        document.getElementById("confirmSurrenderButton").onclick = function() {
+            document.getElementById("surrenderModal").style.display = "none";
+            resetGame();
+        }
+        document.getElementById("cancelSurrenderButton").onclick = function() {
+            document.getElementById("surrenderModal").style.display = "none";
+        }
+        function toggleAI() {
+            aiEnabled = !aiEnabled;
+            const aiToggleButton = document.getElementById("aiToggleButton");
+            aiToggleButton.textContent = aiEnabled ? "Disable AI" : "Enable AI";
+            if (aiEnabled) {
+                aiToggleButton.classList.add("ai-enabled");
+                aiToggleButton.classList.remove("ai-disabled");
+            } else {
+                aiToggleButton.classList.add("ai-disabled");
+                aiToggleButton.classList.remove("ai-enabled");
+            }
+        }
+        function animate() {
+            if (!gameStarted) return;
+            fogTime += FOG_PULSATE_SPEED;
+            drawMaze();
+            updateFireflies();
+            updateExplosion();
+            updateDashParticles();
+            requestAnimationFrame(animate);
+        }
+        function drawMaze() {
+            const canvas = document.getElementById("mazeCanvas");
+            const ctx = canvas.getContext("2d");
+            const isHiddenDifficulty = fireflies.length > 0;
+            ctx.fillStyle = isHiddenDifficulty ? "#000" : "#111";
+            ctx.fillRect(0, 0, canvasSize, canvasSize);
+            maze.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    let minDistance = GLOW_RADIUS * 2;
+                    const distanceToPlayer = Math.hypot(x - playerPosition.x, y - playerPosition.y);
+                    if (distanceToPlayer < minDistance) {
+                        minDistance = distanceToPlayer;
+                    }
+                    const distanceToFinish = Math.hypot(x - finishPosition.x, y - finishPosition.y);
+                    if (distanceToFinish < minDistance) {
+                        minDistance = distanceToFinish;
+                    }
+                    if (aiEnabled) {
+                        const distanceToAI = Math.hypot(x - aiPosition.x, y - aiPosition.y);
+                        if (distanceToAI < minDistance) {
+                            minDistance = distanceToAI;
+                        }
+                    }
+                    if (isHiddenDifficulty) {
+                        fireflies.forEach(firefly => {
+                            const fx = firefly.x / cellSize;
+                            const fy = firefly.y / cellSize;
+                            const distanceToFirefly = Math.hypot(x - fx, y - fy);
+                            if (distanceToFirefly < minDistance) {
+                                minDistance = distanceToFirefly;
+                            }
+                        });
+                    }
+                    let cellOpacity = 1;
+                    if (isHiddenDifficulty) {
+                        const visibilityDistance = GLOW_RADIUS + Math.sin(fogTime) * FOG_PULSATE_AMOUNT + 1;
+                        if (minDistance > visibilityDistance) {
+                            cellOpacity = 0;
+                        } else {
+                            cellOpacity = (visibilityDistance - minDistance) / visibilityDistance;
+                            cellOpacity = Math.max(0, Math.min(1, cellOpacity));
+                        }
+                    }
+                    cellOpacity = lerp(maze[y][x + "_" + y]?.opacity || cellOpacity, cellOpacity, OPACITY_FADE_SPEED);
+                    if (!maze[y][x + "_" + y]) {
+                        maze[y][x + "_" + y] = { opacity: cellOpacity };
+                    } else {
+                        maze[y][x + "_" + y].opacity = cellOpacity;
+                    }
+                    if (isHiddenDifficulty && cellOpacity === 0) {
+                        return;
+                    }
+                    if (cell === 1) {
+                        ctx.fillStyle = "rgba(0, 0, 0, 1)";
+                    } else if (cell === 3) {
+                        if (playerLost) {
+                            ctx.fillStyle = isHiddenDifficulty ? `rgba(255, 0, 0, ${0.8 * cellOpacity})` : "#F00";
+                            if (isHiddenDifficulty) {
+                                ctx.shadowBlur = 15 * cellOpacity;
+                                ctx.shadowColor = `rgba(255, 0, 0, ${0.6 * cellOpacity})`;
+                            }
+                        } else {
+                            ctx.fillStyle = isHiddenDifficulty ? `rgba(0, 255, 0, ${0.8 * cellOpacity})` : "#0F0";
+                            if (isHiddenDifficulty) {
+                                ctx.shadowBlur = 15 * cellOpacity;
+                                ctx.shadowColor = `rgba(0, 255, 0, ${0.6 * cellOpacity})`;
+                            }
+                        }
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                        ctx.shadowBlur = 0;
+                    } else if (cell === 0) {
+                        ctx.fillStyle = isFlashing ? `rgba(255, 0, 0, ${0.5 * cellOpacity})` : `rgba(170, 170, 170, ${cellOpacity})`;
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                });
+            });
+            const currentTime = Date.now();
+            trail.forEach((segment) => {
+                const timeElapsed = currentTime - segment.timestamp;
+                const opacity = 1 - timeElapsed / TRAIL_FADE_DURATION;
+                if (opacity > 0) {
+                    ctx.fillStyle = playerLost ? `rgba(255, 0, 0, ${opacity})` : `rgba(0, 255, 255, ${opacity})`;
+                    ctx.fillRect(segment.x * cellSize, segment.y * cellSize, cellSize, cellSize);
+                }
+            });
+            trail = trail.filter(segment => currentTime - segment.timestamp < TRAIL_FADE_DURATION);
+            if (aiEnabled) {
+                aiTrail.forEach((segment) => {
+                    const timeElapsed = currentTime - segment.timestamp;
+                    const opacity = 1 - timeElapsed / TRAIL_FADE_DURATION;
+                    if (opacity > 0) {
+                        ctx.fillStyle = `rgba(255, 165, 0, ${opacity})`;
+                        ctx.fillRect(segment.x * cellSize, segment.y * cellSize, cellSize, cellSize);
+                    }
+                });
+                aiTrail = aiTrail.filter(segment => currentTime - segment.timestamp < TRAIL_FADE_DURATION);
+            }
+            if (aiEnabled) {
+                if (aiSpeedMultiplier > 1) {
+                    ctx.fillStyle = `rgba(255, 165, 0, 1)`;
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = `rgba(255, 165, 0, 1)`;
+                } else {
+                    ctx.fillStyle = `rgba(255, 165, 0, 0.8)`;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = `rgba(255, 165, 0, 0.6)`;
+                }
+                ctx.fillRect(aiPosition.x * cellSize, aiPosition.y * cellSize, cellSize, cellSize);
+                ctx.shadowBlur = 0;
+            }
+            if (playerLost) {
+                ctx.fillStyle = isHiddenDifficulty ? `rgba(255, 0, 0, ${0.8})` : "#F00";
+                if (isHiddenDifficulty) {
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = `rgba(255, 0, 0, ${0.6})`;
+                }
+            } else {
+                ctx.fillStyle = isHiddenDifficulty ? `rgba(0, 255, 255, ${0.8})` : "#0FF";
+                if (isHiddenDifficulty) {
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = `rgba(0, 255, 255, ${0.6})`;
+                }
+            }
+            ctx.fillRect(playerPosition.x * cellSize, playerPosition.y * cellSize, cellSize, cellSize);
+            ctx.shadowBlur = 0;
+            if (isHiddenDifficulty) {
+                fireflies.forEach(firefly => {
+                    firefly.angle += firefly.rotationSpeed;
+                    const glowOffsetX = Math.sin(fogTime + firefly.angle * Math.PI / 180) * 3;
+                    const glowOffsetY = Math.cos(fogTime + firefly.angle * Math.PI / 180) * 3;
+                    const fireflyGlow = ctx.createRadialGradient(
+                        firefly.x + glowOffsetX,
+                        firefly.y + glowOffsetY,
+                        0,
+                        firefly.x + glowOffsetX,
+                        firefly.y + glowOffsetY,
+                        cellSize * 2
+                    );
+                    fireflyGlow.addColorStop(0, `rgba(255, 255, 150, ${firefly.opacity * 0.7 + Math.sin(fogTime) * 0.05})`);
+                    fireflyGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+                    ctx.fillStyle = fireflyGlow;
+                    ctx.beginPath();
+                    ctx.arc(firefly.x, firefly.y, cellSize * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.save();
+                    ctx.translate(firefly.x, firefly.y);
+                    ctx.rotate(firefly.angle * Math.PI / 180);
+                    ctx.fillStyle = `rgba(255, 255, 100, ${firefly.opacity})`;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, cellSize * 0.3 * firefly.sizeVariation, cellSize * 0.5 * firefly.sizeVariation, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = `rgba(255, 255, 150, ${firefly.opacity * 0.6})`;
+                    ctx.beginPath();
+                    ctx.ellipse(-cellSize * 0.2, -cellSize * 0.1, cellSize * 0.15, cellSize * 0.3, 45 * Math.PI / 180, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.ellipse(cellSize * 0.2, -cellSize * 0.1, cellSize * 0.15, cellSize * 0.3, -45 * Math.PI / 180, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+            }
+            drawExplosion(ctx);
+            drawPulse(ctx);
+            drawDashParticles(ctx);
+        }
+        function lerp(start, end, amt){
+            return (1 - amt) * start + amt * end;
+        }
+        function updateFireflies() {
+            fireflies.forEach(firefly => {
+                firefly.x += firefly.dx;
+                firefly.y += firefly.dy;
+                if (firefly.x < 0 || firefly.x > canvasSize) firefly.dx *= -1;
+                if (firefly.y < 0 || firefly.y > canvasSize) firefly.dy *= -1;
+                firefly.opacity += (Math.random() - 0.5) * 0.02;
+                firefly.opacity = Math.max(0.1, Math.min(0.3, firefly.opacity));
+            });
+        }
+function movePlayer(dx, dy) {
+    if (!gameStarted) return;
+    const moveSound = document.getElementById("moveSound");
+    let adjustedDx = dx;
+    let adjustedDy = dy;
+
+    // التعامل مع دوران الشاشة في المستويات الصعبة
+    switch (rotationAngle % 360) {
+        case 90: case -270: adjustedDx = dy; adjustedDy = -dx; break;
+        case 180: case -180: adjustedDx = -dx; adjustedDy = -dy; break;
+        case 270: case -90: adjustedDx = -dy; adjustedDy = dx; break;
+    }
+
+    const newX = playerPosition.x + adjustedDx;
+    const newY = playerPosition.y + adjustedDy;
+
+    // التأكد من أن الحركة داخل الحدود وليست في جدار
+    if (newX >= 0 && newX < maze.length && newY >= 0 && newY < maze.length && maze[newY][newX] !== 1) {
+        moveSound.currentTime = 0;
+        moveSound.play();
+        trail.unshift({ x: playerPosition.x, y: playerPosition.y, timestamp: Date.now() });
+        playerPosition = { x: newX, y: newY };
+        drawMaze();
+
+        // --- كود الفوز والحفظ التلقائي المصلح ---
+        if (newX === finishPosition.x && newY === finishPosition.y) {
+            createExplosion(playerPosition.x * cellSize + cellSize / 2, playerPosition.y * cellSize + cellSize / 2, "#0FF");
+            
+            // 1. حساب النقاط فوراً
+            // ملاحظة: استخدمنا aiEnabled لأنها المعرفة في كودك بالأعلى
+            const rewards = aiEnabled ? [50, 100, 150, 200] : [5, 10, 15, 20];
+            
+            // تحديد المستوى (سهل=0, متوسط=1...)
+            let levelIdx = 0;
+            const mazeSize = maze.length;
+            if (mazeSize === 21) levelIdx = 0;
+            else if (mazeSize === 31) levelIdx = 1;
+            else if (mazeSize === 41) levelIdx = 2;
+            else if (mazeSize === 51) levelIdx = 3;
+
+            const pointsToSave = rewards[levelIdx];
+
+            // 2. الحفظ التلقائي (مثل بطل العصي)
+            if (!window.isSaved) {
+                window.isSaved = true;
+                saveMazePointsAuto(pointsToSave); // استدعاء دالة الحفظ
+                onWin('player'); // استدعاء دالة الفوز لإظهار الرسائل
+            }
+        }
+    }
+}
+        function onWin(winner) {
+            const winSound = document.getElementById("winSound");
+            const loseSound = document.getElementById("loseSound");
+            clearInterval(timer);
+            clearInterval(rotationTimer);
+            gameStarted = false;
+            gameOver = true;
+            const controls = document.getElementById("controls");
+            controls.classList.remove("active");
+            controls.classList.add("inactive");
+            const timerDisplay = document.getElementById("timer");
+            timerDisplay.classList.remove("active");
+            timerDisplay.classList.add("inactive");
+            const surrenderButton = document.getElementById("surrenderButton");
+            surrenderButton.classList.add("fade-out");
+            surrenderButton.style.pointerEvents = "none";
+            setTimeout(() => {
+                surrenderButton.style.display = "none";
+                surrenderButton.classList.remove("fade-out");
+            }, 500);
+            const mazeContainer = document.getElementById("mazeContainer");
+            mazeContainer.style.transition = "transform 0.5s ease";
+            mazeContainer.style.transform = "rotate(0deg)";
+            rotationAngle = 0;
+            const winMessage = document.getElementById("winMessage");
+            const winText = document.getElementById("winText");
+            if (winner === 'player') {
+                winText.textContent = "Congratulations! You reached the end first!";
+                winSound.play();
+                startConfetti();
+                        // تحديد مصفوفة الجوائز
+        const currentRewards = aiEnabled ? rewardsWithAI : rewardsWithoutAI;
+        let pointsEarned = 0;
+
+        // تحديد النقاط بناءً على مستوى الصعوبة
+        const difficulty = document.getElementById("difficultySelect")?.value || 'easy'; // تأكد من وجود id للصعوبة
+        
+        switch(difficulty) {
+            case 'easy':   pointsEarned = currentRewards[0]; break;
+            case 'medium': pointsEarned = currentRewards[1]; break;
+            case 'hard':   pointsEarned = currentRewards[2]; break;
+            case 'hidden': pointsEarned = currentRewards[3]; break;
+            default:       pointsEarned = currentRewards[0];
+        }
+
+        score += pointsEarned;
+        console.log("النقاط الحالية:", score);
+        
+        // تحديث نص رسالة الفوز لتظهر النقاط
+
+        
+        // استدعاء دالة الحفظ الموجودة في ملف 1.js
+        if (typeof exitAndSave === "function") {
+            // ملاحظة: دالة exitAndSave في ملفك 1.js ستحفظ النقاط في Firebase
+            console.log("جاري التحضير لحفظ النقاط...");
+        }
+    
+    // ... باقي الكود ...
+            } else {
+                winText.textContent = "The AI reached the end first! Try again.";
+                loseSound.play();
+                playerLost = true;
+                createExplosion(aiPosition.x * cellSize + cellSize / 2, aiPosition.y * cellSize + cellSize / 2, "#FFA500");
+                createExplosion(playerPosition.x * cellSize + cellSize / 2, playerPosition.y * cellSize + cellSize / 2, "#F00");
+                createLoseParticleEffects();
+                addCRTEffect();
+            }
+            winMessage.style.display = "block";
+       
+    // ... الكود الموجود مسبقاً (الأصوات والرسائل) ...
+
+    
+
+
+        
+        }
+        function startTimer() {
+            const timeDisplay = document.getElementById("timeLeft");
+            timeDisplay.textContent = formatTime(timeLeft);
+            timer = setInterval(() => {
+                timeLeft--;
+                timeDisplay.textContent = formatTime(timeLeft);
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    clearInterval(rotationTimer);
+                    alert("Time's up! Try again.");
+                    resetGame();
+                }
+            }, 1000);
+        }
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        function startRotationCountdown() {
+            isFlashing = true;
+            const rotationAlert = document.getElementById("rotationAlert");
+            rotationAlert.textContent = "Rotation in 3 seconds!";
+            rotationAlert.classList.add("active");
+            let flashInterval = setInterval(() => {
+                isFlashing = !isFlashing;
+                drawMaze();
+            }, 250);
+            setTimeout(() => {
+                clearInterval(flashInterval);
+                isFlashing = false;
+                drawMaze();
+                rotationAlert.textContent = "";
+                rotationAlert.classList.remove("active");
+                rotateCanvas();
+            }, 3000);
+        }
+        function rotateCanvas() {
+            const mazeContainer = document.getElementById("mazeContainer");
+            const direction = Math.random() < 0.5 ? "clockwise" : "counterclockwise";
+            const rotationAlert = document.getElementById("rotationAlert");
+            rotationAlert.textContent = `Rotating ${direction}...`;
+            rotationAlert.classList.add("active");
+            rotationAngle += (direction === "clockwise" ? 90 : -90);
+            mazeContainer.style.transition = "transform 0.5s ease";
+            mazeContainer.style.transform = `rotate(${rotationAngle}deg)`;
+            setTimeout(() => {
+                rotationAlert.textContent = "";
+                rotationAlert.classList.remove("active");
+            }, 2000);
+        }
+        function resetGame() {
+            clearInterval(timer);
+            clearInterval(rotationTimer);
+            clearInterval(confettiInterval);
+            gameStarted = false;
+            gameOver = true;
+            playerLost = false;
+            const controls = document.getElementById("controls");
+            controls.classList.remove("active");
+            controls.classList.add("inactive");
+            const timerDisplay = document.getElementById("timer");
+            timerDisplay.classList.remove("active");
+            timerDisplay.classList.add("inactive");
+            const surrenderButton = document.getElementById("surrenderButton");
+            surrenderButton.classList.add("fade-out");
+            surrenderButton.style.pointerEvents = "none";
+            setTimeout(() => {
+                surrenderButton.style.display = "none";
+                surrenderButton.classList.remove("fade-out");
+            }, 500);
+            const menu = document.getElementById("menu");
+            menu.style.display = "block";
+            menu.classList.add("fade-in");
+            setTimeout(() => {
+                menu.classList.remove("fade-in");
+                menu.style.pointerEvents = "auto";
+            }, 500);
+            const aiToggleButton = document.getElementById("aiToggleButton");
+            aiToggleButton.style.display = "block";
+            const rotationAlert = document.getElementById("rotationAlert");
+            rotationAlert.textContent = "";
+            rotationAlert.classList.remove("active");
+            const aiSpeedAlert = document.getElementById("aiSpeedAlert");
+            aiSpeedAlert.textContent = "";
+            aiSpeedAlert.classList.remove("active");
+            document.getElementById("timeLeft").textContent = "0:00";
+            document.getElementById("winMessage").style.display = "none";
+            const mazeContainer = document.getElementById("mazeContainer");
+            mazeContainer.style.transition = "transform 0.5s ease";
+            mazeContainer.style.transform = "rotate(0deg)";
+            rotationAngle = 0;
+            const canvas = document.getElementById("mazeCanvas");
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+            trail = [];
+            aiTrail = [];
+            explosionParticles = [];
+            dashParticles = [];
+            maze.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    if (maze[y][x + "_" + y]) {
+                        maze[y][x + "_" + y].opacity = 0;
+                    }
+                });
+            });
+        }
+        function startConfetti() {
+            const canvas = document.getElementById("mazeCanvas");
+            const ctx = canvas.getContext("2d");
+            const confettiColors = ["#FF0", "#0FF", "#F0F", "#0F0", "#FF5733"];
+            let confettiParticles = Array.from({ length: 100 }, () => ({
+                x: Math.random() * canvasSize,
+                y: Math.random() * canvasSize,
+                dx: (Math.random() - 0.5) * 2,
+                dy: (Math.random() - 0.5) * 2,
+                color: confettiColors[Math.floor(Math.random() * confettiColors.length)]
+            }));
+            clearInterval(confettiInterval);
+            confettiInterval = setInterval(() => {
+                ctx.clearRect(0, 0, canvasSize, canvasSize);
+                drawMaze();
+                confettiParticles.forEach((p) => {
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    p.x += p.dx;
+                    p.y += p.dy;
+                    if (p.y > canvasSize || p.x < 0 || p.x > canvasSize) {
+                        p.y = 0;
+                        p.x = Math.random() * canvasSize;
+                    }
+                });
+            }, 30);
+        }
+        window.addEventListener("keydown", function(e) {
+            const controlsVisible = document.getElementById("controls").classList.contains("active");
+            if (!controlsVisible) return;
+            switch(e.key) {
+                case "ArrowUp":
+                    movePlayer(0, -1);
+                    e.preventDefault();
+                    break;
+                case "ArrowDown":
+                    movePlayer(0, 1);
+                    e.preventDefault();
+                    break;
+                case "ArrowLeft":
+                    movePlayer(-1, 0);
+                    e.preventDefault();
+                    break;
+                case "ArrowRight":
+                    movePlayer(1, 0);
+                    e.preventDefault();
+                    break;
+            }
+        });
+        const instructionsButton = document.getElementById("instructionsButton");
+        const instructionsModal = document.getElementById("instructionsModal");
+        const closeModal = document.getElementById("closeModal");
+        instructionsButton.onclick = function() {
+            instructionsModal.style.display = "block";
+        }
+        closeModal.onclick = function() {
+            instructionsModal.style.display = "none";
+        }
+        window.onclick = function(event) {
+            if (event.target == instructionsModal) {
+                instructionsModal.style.display = "none";
+            }
+            if (event.target == surrenderModal) {
+                surrenderModal.style.display = "none";
+            }
+        }
+        function findPath(start, end) {
+            let queue = [];
+            let visited = [];
+            for (let i = 0; i < maze.length; i++) {
+                visited[i] = [];
+            }
+            queue.push({ x: start.x, y: start.y, path: [] });
+            visited[start.y][start.x] = true;
+            const directions = [
+                { dx: 0, dy: -1 },
+                { dx: 0, dy: 1 },
+                { dx: -1, dy: 0 },
+                { dx: 1, dy: 0 }
+            ];
+            while (queue.length > 0) {
+                let current = queue.shift();
+                if (current.x === end.x && current.y === end.y) {
+                    return current.path;
+                }
+                for (let dir of directions) {
+                    let nx = current.x + dir.dx;
+                    let ny = current.y + dir.dy;
+                    if (nx >= 0 && nx < maze.length && ny >= 0 && ny < maze.length && maze[ny][nx] !== 1 && !visited[ny][nx]) {
+                        visited[ny][nx] = true;
+                        queue.push({ x: nx, y: ny, path: [...current.path, { x: nx, y: ny }] });
+                    }
+                }
+            }
+            return [];
+        }
+        function moveAI() {
+            if (gameOver) return;
+            const currentTime = Date.now();
+            if (currentTime < aiConfusedUntil) {
+                moveAIRandomly();
+            } else {
+                if (aiPath.length > 0) {
+                    let nextPosition = aiPath.shift();
+                    aiTrail.unshift({ x: aiPosition.x, y: aiPosition.y, timestamp: Date.now() });
+                    aiPosition = { x: nextPosition.x, y: nextPosition.y };
+                    if (aiPosition.x === finishPosition.x && aiPosition.y === finishPosition.y) {
+                        createExplosion(aiPosition.x * cellSize + cellSize / 2, aiPosition.y * cellSize + cellSize / 2, "#FFA500");
+                        onWin('ai');
+                        return;
+                    }
+                }
+                if (!aiSpeedUpCooldown && Math.random() < aiSpeedUpChance) {
+                    aiSpeedMultiplier = 2;
+                    aiSpeedUpCooldown = true;
+                    const aiSpeedAlert = document.getElementById("aiSpeedAlert");
+                    aiSpeedAlert.textContent = "AI is speeding up!";
+                    aiSpeedAlert.classList.add("active", "speeding");
+                    const mazeContainer = document.getElementById("mazeContainer");
+                    mazeContainer.classList.add("speeding");
+                    createDashParticles();
+                    setTimeout(() => {
+                        aiSpeedMultiplier = 1;
+                        aiSpeedAlert.textContent = "";
+                        aiSpeedAlert.classList.remove("active", "speeding");
+                        mazeContainer.classList.remove("speeding");
+                    }, aiSpeedUpDuration);
+                    setTimeout(() => {
+                        aiSpeedUpCooldown = false;
+                    }, 10000);
+                }
+                if (aiSpeedMultiplier == 1 && Math.random() < 0.05) {
+                    aiConfusedUntil = currentTime + 1000;
+                }
+            }
+            setTimeout(moveAI, aiMoveDelay / aiSpeedMultiplier);
+        }
+        function moveAIRandomly() {
+            const directions = [
+                { dx: 0, dy: -1 },
+                { dx: 0, dy: 1 },
+                { dx: -1, dy: 0 },
+                { dx: 1, dy: 0 }
+            ];
+            let validMoves = [];
+            directions.forEach(dir => {
+                let nx = aiPosition.x + dir.dx;
+                let ny = aiPosition.y + dir.dy;
+                if (nx >= 0 && nx < maze.length && ny >= 0 && ny < maze.length && maze[ny][nx] !== 1) {
+                    validMoves.push({ x: nx, y: ny });
+                }
+            });
+            if (validMoves.length > 0) {
+                let randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+                aiTrail.unshift({ x: aiPosition.x, y: aiPosition.y, timestamp: Date.now() });
+                aiPosition = { x: randomMove.x, y: randomMove.y };
+            }
+        }
+        function createExplosion(x, y, color) {
+            explosionParticles = [];
+            for (let i = 0; i < 50; i++) {
+                explosionParticles.push({
+                    x: x,
+                    y: y,
+                    dx: (Math.random() - 0.5) * 5,
+                    dy: (Math.random() - 0.5) * 5,
+                    lifetime: 1000,
+                    color: color
+                });
+            }
+        }
+        function createLoseParticleEffects() {
+            for (let i = 0; i < 100; i++) {
+                explosionParticles.push({
+                    x: playerPosition.x * cellSize + cellSize / 2,
+                    y: playerPosition.y * cellSize + cellSize / 2,
+                    dx: (Math.random() - 0.5) * 10,
+                    dy: (Math.random() - 0.5) * 10,
+                    lifetime: 1500,
+                    color: "#F00"
+                });
+            }
+        }
+        function addCRTEffect() {
+            const crtOverlay = document.getElementById("crtOverlay");
+            crtOverlay.classList.add("crt-effect", "crt-transition");
+            setTimeout(() => {
+                crtOverlay.classList.remove("crt-effect", "crt-transition");
+            }, 1000);
+        }
+        function updateExplosion() {
+            const currentTime = Date.now();
+            explosionParticles = explosionParticles.filter(p => p.lifetime > 0);
+            explosionParticles.forEach(p => {
+                p.x += p.dx;
+                p.y += p.dy;
+                p.lifetime -= 16;
+            });
+        }
+        function drawExplosion(ctx) {
+            explosionParticles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        function createDashParticles() {
+            dashParticles = [];
+            for (let i = 0; i < 30; i++) {
+                dashParticles.push({
+                    x: aiPosition.x * cellSize + cellSize / 2,
+                    y: aiPosition.y * cellSize + cellSize / 2,
+                    dx: (Math.random() - 0.5) * 2,
+                    dy: (Math.random() - 0.5) * 2,
+                    lifetime: 500,
+                    color: "#FFA500"
+                });
+            }
+        }
+        function updateDashParticles() {
+            const currentTime = Date.now();
+            dashParticles = dashParticles.filter(p => p.lifetime > 0);
+            dashParticles.forEach(p => {
+                p.x += p.dx;
+                p.y += p.dy;
+                p.lifetime -= 16;
+            });
+        }
+        function drawDashParticles(ctx) {
+            dashParticles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        function drawPulse(ctx) {
+            if (finishPosition) {
+                const centerX = finishPosition.x * cellSize + cellSize / 2;
+                const centerY = finishPosition.y * cellSize + cellSize / 2;
+                const pulseRadius = 10 + 5 * Math.sin(fogTime * 10);
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, pulseRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            const title = document.getElementById('title');
+            const text = title.textContent;
+            title.textContent = '';
+            for(let i = 0; i < text.length; i++) {
+                const span = document.createElement('span');
+                span.textContent = text[i];
+                span.classList.add('neon-letter');
+                span.style.animationDelay = (Math.random() * 2) + 's';
+                title.appendChild(span);
+            }
+        });
+async function saveMazePointsAuto(pointsToAdd) {
+    const playerName = localStorage.getItem('p_name') || "لاعب_مجهول";
+    const DATABASE_URL = "https://games-center-5597c-default-rtdb.firebaseio.com/";
+    const fileName = "game2"; 
+
+    try {
+        const response = await fetch(`${DATABASE_URL}/players/${playerName}/games/${fileName}.json`);
+        const currentTotal = await response.json() || 0;
+        const newTotal = Number(currentTotal) + Number(pointsToAdd);
+
+        await fetch(`${DATABASE_URL}/players/${playerName}/games/${fileName}.json`, {
+            method: 'PUT',
+            body: JSON.stringify(newTotal)
+        });
+        console.log("تم الحفظ التلقائي بنجاح المجموع الجديد: " + newTotal);
+    } catch (e) {
+        console.error("خطأ في الاتصال بالقاعدة:", e);
+    }
+}
+    </script>
+</body>
+</html>

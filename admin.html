@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المدير - المتصدرين</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .admin-header {
+            text-align: center;
+            background: #1e293b;
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+
+        tr:hover { background-color: #f1f5f9; }
+
+        /* تمييز المركز الأول */
+        tr:first-child td {
+            background-color: #fefce8;
+            font-weight: bold;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            background: #38bdf8;
+            color: white;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #64748b;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-header">
+        <h1>🔑 لوحة تحكم الإدارة</h1>
+        <p>مراقبة نقاط اللاعبين والترتيب العام</p>
+    </div>
+
+    <div class="stats-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>الترتيب</th>
+                    <th>اسم اللاعب</th>
+                    <th>إجمالي النقاط</th>
+                    <th>حالة الإنجاز</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <tr>
+                    <td colspan="4">جاري تحميل البيانات...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <a href="index.html" class="back-link">العودة للرئيسية</a>
+
+    <script>
+        // يحمل النقاط القديمة إذا كانت موجودة، أو يبدأ من 0
+let score = parseInt(localStorage.getItem('totalScore')) || 0;
+        // --- إعدادات Firebase ---
+        // ضع الرابط الخاص بك هنا (نفس الرابط الموجود في الصفحة الرئيسية)
+        const DATABASE_URL = "https://games-center-5597c-default-rtdb.firebaseio.com/"; 
+
+        async function fetchAllPlayers() {
+            try {
+                const response = await fetch(`${DATABASE_URL}/players.json`);
+                const allPlayersData = await response.json();
+                
+                if (!allPlayersData) {
+                    document.getElementById('leaderboard-body').innerHTML = "<tr><td colspan='4'>لا يوجد لاعبين مسجلين بعد</td></tr>";
+                    return;
+                }
+
+                let playersArray = [];
+
+                // تحويل الكائن (Object) إلى مصفوفة (Array) للترتيب
+                for (let name in allPlayersData) {
+                    let games = allPlayersData[name].games || {};
+                    let totalScore = Object.values(games).reduce((sum, current) => sum + current, 0);
+                    
+                    playersArray.push({
+                        name: name,
+                        total: totalScore
+                    });
+                }
+
+                // الترتيب من الأعلى للأقل (الفرز)
+                playersArray.sort((a, b) => b.total - a.total);
+
+                // عرض البيانات في الجدول
+                const tableBody = document.getElementById('leaderboard-body');
+                tableBody.innerHTML = "";
+
+                playersArray.forEach((player, index) => {
+                    let rankText = index + 1;
+                    if (index === 0) rankText = "🥇 الأول";
+                    if (index === 1) rankText = "🥈 الثاني";
+                    if (index === 2) rankText = "🥉 الثالث";
+
+                    let row = `
+                        <tr>
+                            <td>${rankText}</td>
+                            <td>${player.name}</td>
+                            <td><span class="badge">${player.total} نقطة</span></td>
+                            <td>${player.total > 1000 ? "🔥 أسطوري" : "🎮 لاعب نشط"}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+
+            } catch (error) {
+                console.error("خطأ:", error);
+                document.getElementById('leaderboard-body').innerHTML = "<tr><td colspan='4'>حدث خطأ أثناء الاتصال بالخادم</td></tr>";
+            }
+        }
+
+        // جلب البيانات فور فتح الصفحة
+        window.onload = fetchAllPlayers;
+        
+        // تحديث تلقائي كل 30 ثانية
+        setInterval(fetchAllPlayers, 30000);
+    function saveAndExit() {
+    // حفظ النقاط في ذاكرة المتصفح (عشان ما تضيع إذا قفلت الصفحة)
+    localStorage.setItem('totalScore', score);
+    
+    // تنبيه المستخدم (اختياري)
+    alert("Game Saved! Total Score: " + score);
+    
+    // العودة للقائمة الرئيسية أو إغلاق اللعبة
+    resetGame(); 
+}
+    </script>
+</body>
+</html>
